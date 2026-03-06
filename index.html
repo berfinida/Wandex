@@ -1,0 +1,230 @@
+﻿<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wandex — Smart Travel Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script>
+    (function() {
+      const key = 'wandex_theme_v1';
+      const saved = localStorage.getItem(key);
+      const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initialTheme = saved === 'light' || saved === 'dark' ? saved : (systemDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', initialTheme);
+    })();
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="progress" id="progress"></div>
+  <div class="toast-wrap"><div id="toast" class="toast"></div></div>
+
+  <!-- ── HEADER ─────────────────────────────────────────── -->
+  <header>
+    <div class="header-inner">
+
+      <a class="logo" href="#">
+        <div class="logo-mark">🌐</div>
+        <span class="logo-name">Wandex</span>
+      </a>
+
+      <div class="h-div"></div>
+
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <span class="search-icon">⌕</span>
+          <input class="search-input" id="q" type="text" autocomplete="off" />
+        </div>
+        <button class="btn btn-blue" id="btnSearch"></button>
+        <button class="btn btn-icon" id="btnLocate" title="">📍</button>
+      </div>
+
+      <div class="lang-pill">
+        <button class="lang-opt" id="btnTR" onclick="setLang('tr')">TR</button>
+        <button class="lang-opt" id="btnEN" onclick="setLang('en')">EN</button>
+      </div>
+
+      <button class="btn btn-icon" id="btnTheme" aria-label="Tema değiştir" title="Tema değiştir">🌙</button>
+      <button class="btn btn-icon" id="btnRefresh" title="Refresh">↻</button>
+      <select class="fav-select" id="favSelect"></select>
+
+    </div>
+  </header>
+
+  <!-- ── MAIN ───────────────────────────────────────────── -->
+  <main>
+    <div class="quick-cities" aria-label="Quick cities">
+      <button class="btn quick-chip" type="button" data-city="Istanbul">Istanbul</button>
+      <button class="btn quick-chip" type="button" data-city="London">London</button>
+      <button class="btn quick-chip" type="button" data-city="Paris">Paris</button>
+      <button class="btn quick-chip" type="button" data-city="Tokyo">Tokyo</button>
+      <button class="btn quick-chip" type="button" data-city="New York">New York</button>
+    </div>
+    <div class="recent-wrap" id="recentWrap" hidden>
+      <div class="recent-title" data-i18n="recentSearches"></div>
+      <div class="recent-list" id="recentList" aria-label="Recent searches"></div>
+    </div>
+    <div class="card compare-card">
+      <div class="section-label"><span data-i18n="compareTitle"></span></div>
+      <div class="compare-top">
+        <div class="compare-input-wrap">
+          <span class="search-icon">⌕</span>
+          <input class="compare-input" id="compareQ" type="text" autocomplete="off" />
+        </div>
+        <button class="btn btn-xs" id="btnCompareAdd"></button>
+        <button class="btn btn-xs" id="btnCompareClear" hidden></button>
+      </div>
+      <div id="comparePanel" class="compare-panel" hidden>
+        <div class="compare-head">
+          <span data-i18n="compareMetric"></span>
+          <span id="cmpMainName">—</span>
+          <span id="cmpOtherName">—</span>
+        </div>
+        <div id="compareRows"></div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="card">
+      <div class="hero-grid">
+        <div>
+          <div id="placeTitle" class="city-name">—</div>
+          <div id="placeMeta" class="city-meta">—</div>
+          <div id="travelScoreCard" class="travel-score" aria-live="polite">
+            <div class="travel-score-top">
+              <span class="travel-score-label" data-i18n="travelScoreTitle"></span>
+              <span id="travelScoreStatus" class="travel-score-status">—</span>
+            </div>
+            <div class="travel-score-main">
+              <span id="travelScoreValue">—</span>
+              <span class="travel-score-max">/ 100</span>
+            </div>
+            <div id="travelScoreHint" class="travel-score-hint">—</div>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi">
+              <div class="kpi-label" data-i18n="temp"></div>
+              <div id="kpiTemp" class="kpi-val" style="color:var(--amber)">—</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label" data-i18n="wind"></div>
+              <div id="kpiWind" class="kpi-val" style="color:#93c5fd">—</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label" data-i18n="localTime"></div>
+              <div id="kpiTime" class="kpi-val" style="color:var(--violet)">—</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">AQI</div>
+              <div id="kpiAqi" class="kpi-val" style="color:var(--green)">—</div>
+            </div>
+          </div>
+
+          <div class="hero-panels">
+            <div class="panel">
+              <div class="panel-title" data-i18n="sunTitle"></div>
+              <div class="kv-row"><span class="kv-k" data-i18n="sunrise"></span><span id="sunrise" class="kv-v">—</span></div>
+              <div class="kv-row"><span class="kv-k" data-i18n="sunset"></span><span id="sunset" class="kv-v">—</span></div>
+              <div class="kv-row"><span class="kv-k" data-i18n="dayLength"></span><span id="daylen" class="kv-v">—</span></div>
+            </div>
+            <div class="panel">
+              <div class="panel-title" data-i18n="fxTitle"></div>
+              <div class="kv-row"><span class="kv-k">TRY</span><span id="fxTry" class="kv-v">—</span></div>
+              <div class="kv-row"><span class="kv-k">EUR</span><span id="fxEur" class="kv-v">—</span></div>
+              <div class="kv-row"><span class="kv-k">GBP</span><span id="fxGbp" class="kv-v">—</span></div>
+            </div>
+          </div>
+
+          <div class="hero-actions">
+            <button class="btn btn-xs" id="btnCopy"><span data-i18n="copyCoords"></span></button>
+            <button class="btn btn-xs" id="btnShare" aria-label="Şehri paylaş" title="Şehri paylaş"><span data-i18n="shareCity"></span></button>
+            <button class="btn btn-xs" id="btnSave" aria-label="Favoriye ekle" title="Favoriye ekle">★</button>
+            <span id="aqiLabel" style="font-size:12px;font-weight:500;color:var(--text-3);align-self:center;margin-left:4px"></span>
+          </div>
+        </div>
+
+        <div class="hero-map">
+          <div id="map"></div>
+          <div class="map-bar">
+            <span id="coords">—</span>
+            <span id="tz">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEATHER -->
+    <div class="card">
+      <div class="section-label" data-i18n="weatherTitle"></div>
+      <div id="weatherNow" class="weather-now">—</div>
+      <div class="temp-chart-wrap">
+        <canvas id="tempChart" class="temp-chart-canvas" aria-label="24-hour temperature trend chart"></canvas>
+      </div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px" data-i18n="hourlyLabel"></div>
+      <div id="hourly" class="hourly-scroll"></div>
+      <div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin:18px 0 10px" data-i18n="dailyLabel"></div>
+      <div id="daily" class="data-table"></div>
+    </div>
+
+    <!-- AIR QUALITY -->
+    <div class="card">
+      <div class="section-label" data-i18n="airTitle"></div>
+      <div id="aqiBarWrap" class="aqi-bar-wrap" role="progressbar" aria-label="AQI level" aria-valuemin="0" aria-valuemax="500" aria-valuenow="0" aria-valuetext="AQI —">
+        <div class="aqi-bar-track">
+          <div id="aqiBarFill" class="aqi-bar-fill"></div>
+        </div>
+        <div class="aqi-bar-meta">
+          <span id="aqiBarText">AQI —</span>
+          <span>0-500</span>
+        </div>
+      </div>
+      <div id="air" class="air-grid"></div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:12px;font-weight:400" data-i18n="airSource"></div>
+    </div>
+
+    <!-- COUNTRY + HOLIDAYS -->
+    <div class="ch-grid">
+      <div class="card">
+        <div class="section-label" data-i18n="countryTitle"></div>
+        <div id="country"></div>
+      </div>
+      <div class="card">
+        <div class="section-label">
+          <span data-i18n="holidaysTitle"></span>
+          <span id="holidayYear" style="font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px;font-size:11px"></span>
+        </div>
+        <div id="holidays" class="data-table"></div>
+      </div>
+    </div>
+
+    <!-- CRYPTO -->
+    <div class="card">
+      <div class="section-label" data-i18n="cryptoTitle"></div>
+      <div id="crypto" class="crypto-row"></div>
+    </div>
+
+  </main>
+
+  <footer>
+    <span class="footer-main" data-i18n="footer"></span>
+    <div class="footer-credit">
+      Built by Berfin Nida Öztürk ·
+      <a class="footer-link" href="https://github.com/berfinida" target="_blank" rel="noopener noreferrer" aria-label="Berfin Nida Öztürk GitHub profile">GitHub</a>
+      ·
+      <a class="footer-link" href="https://www.linkedin.com/in/berfin-nida-%C3%B6zt%C3%BCrk-6a12131b7/" target="_blank" rel="noopener noreferrer" aria-label="Berfin Nida Öztürk LinkedIn profile">LinkedIn</a>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
+
