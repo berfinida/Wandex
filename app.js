@@ -1,4 +1,4 @@
-﻿// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // i18n
 // ═══════════════════════════════════════════════
 const LANG_KEY = 'wandex_lang_v1';
@@ -81,6 +81,7 @@ const TX = {
     themeSwitchToLight: 'Açık temaya geç',
     themeSwitchToDark: 'Koyu temaya geç',
     footer: 'Veri kaynakları: Open-Meteo · Sunrise-Sunset · REST Countries · Nager.Date · open.er-api.com · CoinGecko · OpenStreetMap',
+    copyright: '© 2026 Berfin Nida — Kod & Tasarım',
   },
   en: {
     searchPlaceholder: 'Istanbul, Paris, Tokyo…',
@@ -156,6 +157,7 @@ const TX = {
     themeSwitchToLight: 'Switch to light theme',
     themeSwitchToDark: 'Switch to dark theme',
     footer: 'Data: Open-Meteo · Sunrise-Sunset · REST Countries · Nager.Date · open.er-api.com · CoinGecko · OpenStreetMap',
+    copyright: '© 2026 Berfin Nida — Code & Create',
   }
 };
 
