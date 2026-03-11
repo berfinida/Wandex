@@ -15,11 +15,7 @@
 A modern **travel information dashboard** that gathers **real-time data from multiple public APIs** and presents them in a clean interactive interface.
 
 🌐 **Live Demo**
-https://berfinida.github.io/Wandex/
-
-</div>
-
----
+https://wandex-seven.vercel.app/
 
 # ✨ Overview
 
