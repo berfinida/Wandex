@@ -4,24 +4,28 @@
 
 # 🌍 Wandex
 
-### Smart Travel Dashboard • Real-Time Data • Interactive Map
+### Smart Travel Dashboard • API Data with Source Times • Interactive Map
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-000?style=for-the-badge\&logo=github)](https://YOUR-DEMO-LINK)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-000?style=for-the-badge\&logo=github)](https://berfinida.github.io/Wandex/)
 [![HTML](https://img.shields.io/badge/HTML5-Structure-orange?style=for-the-badge\&logo=html5)]()
 [![CSS](https://img.shields.io/badge/CSS3-Styling-blue?style=for-the-badge\&logo=css3)]()
 [![JavaScript](https://img.shields.io/badge/JavaScript-Logic-yellow?style=for-the-badge\&logo=javascript)]()
 [![Responsive](https://img.shields.io/badge/Responsive-Design-green?style=for-the-badge)]()
 
-A modern **travel information dashboard** that gathers **real-time data from multiple public APIs** and presents them in a clean interactive interface.
+A modern **travel information dashboard** that gathers **data from multiple public APIs with source times** and presents them in a clean interactive interface.
 
 🌐 **Live Demo**
-https://wandex-seven.vercel.app/
+https://berfinida.github.io/Wandex/
+
+</div>
+
+---
 
 # ✨ Overview
 
 **Wandex** is a smart travel dashboard that allows users to explore cities around the world and instantly access useful travel information.
 
-The application combines multiple real-time data sources to provide:
+The application combines multiple external data sources to provide:
 
 • weather conditions
 • air quality information
@@ -41,7 +45,7 @@ The goal of this project is to demonstrate how **multiple external APIs can be c
 
 ## 🔎 City Search
 
-Users can search for cities worldwide.
+Users can search for cities worldwide. When multiple matches are found, a selection panel shows country, region, and coordinates so users can choose the intended city. The same selection is available for city comparisons.
 
 The application retrieves city data including:
 
@@ -55,7 +59,7 @@ The dashboard updates dynamically when a new city is selected.
 
 ## 🌤 Weather Dashboard
 
-Real-time weather information is displayed for the selected city.
+Weather model data and forecasts is displayed for the selected city.
 
 Includes:
 
@@ -64,6 +68,7 @@ Includes:
 • hourly forecast
 • 7-day forecast
 • visual temperature trend chart
+• saved °C / °F preference across current weather, forecasts, charts, and comparisons
 
 Weather data is powered by the **Open-Meteo API**.
 
@@ -106,7 +111,7 @@ Features include:
 
 ## 💱 Currency Exchange
 
-Live currency rates relative to USD are shown.
+Daily currency rates relative to USD are shown.
 
 Examples include:
 
@@ -136,7 +141,7 @@ Displays official public holidays for the selected country using the **Nager.Dat
 
 ## ₿ Crypto Prices
 
-Live cryptocurrency prices are shown using the **CoinGecko API**.
+Cryptocurrency prices with provider update times are shown using the **CoinGecko API**.
 
 Examples include:
 
@@ -153,6 +158,7 @@ Features include:
 
 • quick city switching
 • persistent storage using localStorage
+• add or remove the active city with the star button
 
 ---
 
@@ -193,10 +199,12 @@ Features include:
 
 The interface supports multiple languages.
 
-Currently available:
+Available interface languages:
 
-• Turkish
-• English
+• Turkish, English, German, French, Spanish, Italian, Portuguese, Dutch
+• Polish, Russian, Ukrainian, Arabic, Persian, Hebrew
+
+Arabic, Persian, and Hebrew use a right-to-left layout. City and holiday names follow the language returned by the upstream data source when available.
 
 ---
 
@@ -232,7 +240,7 @@ The project integrates several public APIs:
 | CoinGecko      | Cryptocurrency prices   |
 | OpenStreetMap  | Map tiles               |
 
-All APIs used in this project **do not require API keys**, making the project lightweight and easy to deploy.
+The dashboard calls public endpoints. Access, quotas, and API-key requirements are controlled by each provider. Rejected requests are shown as unavailable; the app does not substitute sample values.
 
 ---
 
@@ -244,8 +252,13 @@ Wandex
 ├── index.html
 ├── style.css
 ├── app.js
+├── locales.js
+├── robots.txt
+├── sitemap.xml
+├── site.webmanifest
+├── vercel.json
 │
-├── assets/
+├── tests/app.test.cjs
 ├── preview.png
 │
 └── README.md
@@ -264,12 +277,52 @@ This project was created to:
 
 ---
 
+# 🔎 Search and sharing metadata
+
+The production page includes a canonical URL, robots rules, sitemap, web manifest, Open Graph and X/Twitter cards, a `WebApplication` JSON-LD schema, and a lightweight SVG favicon. Metadata points to `https://wandex-seven.vercel.app/`; update these URLs if the production domain changes.
+
+Vercel serves this build as a static site. `vercel.json` adds clean URLs, conservative cache behavior for the HTML shell, long-lived caching for immutable static assets, and browser security headers.
+
+---
+
+# Trip Planner & Forecast Suggestion
+
+Each city has a local trip plan with a travel date, up to 4,000 characters of notes, and a five-item preparation checklist. Changes save automatically in this browser; cities are distinguished by coordinates. If browser storage is unavailable, plans remain available while the page is open and show a session-only notice. City share links do not contain plan notes.
+
+Use **Download plan (.txt)** to export the active city's date, notes, coordinates, and checklist as a UTF-8 text file.
+
+The forecast highlights a day by balancing lower precipitation probability with average temperatures closer to 22°C. Missing measurements and past days are excluded. This is a simple comparison of available forecasts, not a guarantee of good weather.
+
+---
+
+# Local Development & Checks
+
+No build step or package installation is required. Serve the project directory:
+
+```sh
+python3 -m http.server 8000
+```
+
+Open `http://localhost:8000`. Internet access is required for API data, map tiles, and CDN libraries. If the map library cannot load, the dashboard still displays location coordinates.
+
+Run the dependency-free regression checks with Node.js 18 or later:
+
+```sh
+node --check app.js
+node --test tests/app.test.cjs
+```
+
+The checks cover unavailable storage, malformed saved data, coordinate validation, missing score inputs, city-local forecast labels, stale weather responses, source failures, HTML escaping, temperature preferences, favourite removal, and city-result selection. They use mocked browser objects and network responses; they do not verify live API availability or browser layout.
+
+The dashboard clears previous city measurements during city changes and lists failed providers in a persistent status message. Use the refresh button to retry. Missing measurements are excluded from the travel score; it is a weather-based heuristic, not a comprehensive travel assessment.
+
+---
+
 # 🔮 Future Improvements
 
 Possible improvements include:
 
 • weather radar layers on the map
-• travel score system
 • offline caching
 • advanced analytics dashboard
 • user accounts and saved trips
@@ -291,3 +344,16 @@ https://www.linkedin.com/in/berfin-nida-%C3%B6zt%C3%BCrk-6a12131b7/
 # 📄 License
 
 MIT License
+
+
+## Data integrity and freshness
+
+Production data comes from the listed APIs; test fixtures are isolated in `tests/` and are never loaded by the page. Requests bypass the browser HTTP cache. Each source shows retrieval time separately from the provider data time, when supplied. A successful HTTP response alone is not treated as valid data.
+
+Current weather and air-quality timestamps must be within two hours of the city-local current time (with at most 15 minutes of forward tolerance). Cryptocurrency prices must include a provider timestamp no older than 15 minutes. Daily USD rates must have a provider timestamp no older than 48 hours. These are application validation limits, not provider update guarantees. Invalid or older responses are shown as unavailable. Country reference data has no provider update date; its population reference year is unknown. Public holidays use the selected city's current year, without truncating the returned list. Sun calculations request the selected city's current date explicitly.
+
+While the page is visible, data reloads after 15 minutes; returning to a stale page triggers a reload. Network recovery triggers a new request. Failed refreshes clear previous values instead of displaying them as current. Time checks depend on the user's device clock.
+
+Weather and AQI are model products, daily FX rates are not live market quotes, and the conditions score and highlighted day are app calculations. A newly retrieved response is not proof that the underlying provider data has just been updated.
+
+Verified provider documentation: [Open-Meteo weather](https://open-meteo.com/en/docs), [Open-Meteo / CAMS air quality](https://open-meteo.com/en/docs/air-quality-api), [daily exchange rates](https://www.exchangerate-api.com/docs/free), [CoinGecko timestamps](https://docs.coingecko.com/reference/simple-price), [sunrise/sunset](https://sunrise-sunset.org/api).
