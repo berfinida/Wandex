@@ -392,9 +392,9 @@ test('language packs cover the selector languages and interpolate translated pro
 });
 
 test('versioned local assets prevent a new page from using an immutable old translation script', () => {
-  assert.match(page, /href="style\.css\?v=20261017\.5"/);
-  assert.match(page, /src="locales\.js\?v=20261017\.5"/);
-  assert.match(page, /src="app\.js\?v=20261017\.5"/);
+  assert.match(page, /href="style\.css\?v=20261017\.6"/);
+  assert.match(page, /src="locales\.js\?v=20261017\.6"/);
+  assert.match(page, /src="app\.js\?v=20261017\.6"/);
 });
 
 test('offline state clearly marks that new live data cannot be retrieved', () => {
@@ -462,10 +462,27 @@ test('city guides are crawlable documents with unique metadata and live-panel li
   });
 });
 
+test('Turkish city guides are present and indexed in the sitemap', () => {
+  ['istanbul', 'londra', 'paris', 'tokyo', 'new-york'].forEach(city => {
+    const guide = fs.readFileSync(`tr/sehir/${city}/index.html`, 'utf8');
+    assert.match(guide, /<title>[^<]+Wandex<\/title>/);
+    assert.match(sitemap, new RegExp(`/tr/sehir/${city}/`));
+  });
+});
+
 test('affiliate configuration is disabled by default and commercial documentation is present', () => {
   const config = fs.readFileSync('affiliate-config.js', 'utf8');
   const readiness = fs.readFileSync('COMMERCIAL_READINESS.md', 'utf8');
   assert.match(config, /enabled:false/);
   assert.match(readiness, /Launch blockers/);
   assert.match(readiness, /Open-Meteo/);
+});
+
+test('trip planner preserves bounded structured preferences and only outlines valid date ranges', () => {
+  const h = harness();
+  assert.equal(h.run("normalizePlan({endDate:'2026-10-20',people:3,budget:500,currency:'EUR',pace:'active',interests:['interestFood','bad']}).interests.length"), 1);
+  assert.equal(h.run("daysBetween('2026-10-20','2026-10-19')"), 0);
+  assert.equal(h.run("daysBetween('2026-10-19','2026-10-21')"), 3);
+  h.run("planDraft=normalizePlan({date:'2026-10-19',endDate:'2026-10-20',interests:['interestFood'],budget:100,currency:'USD'}); renderPlanOutline();");
+  assert.match(h.node('planOutline').innerHTML, /1\. gün|Day 1/);
 });

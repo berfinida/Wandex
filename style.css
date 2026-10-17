@@ -1020,6 +1020,17 @@ footer {
 .plan-fields { display: flex; flex-direction: column; gap: 10px; }
 .plan-fields label { font-size: 12px; font-weight: 600; color: var(--text-2); }
 .plan-fields input, .plan-fields textarea { width: 100%; min-width: 0; padding: 12px; font: inherit; color: var(--text); background: var(--control-bg); border: 1px solid var(--border-hi); border-radius: 10px; }
+.plan-fields select { width:100%; padding:12px; color:var(--text); background:var(--control-bg); border:1px solid var(--border-hi); border-radius:10px; font:inherit; }
+.plan-inline-fields { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.plan-inline-fields label { display:grid; gap:6px; }
+.plan-interests { border:0; padding:0; margin:4px 0; }
+.plan-interests legend { margin-bottom:8px; font-size:12px; font-weight:600; color:var(--text-2); }
+#planInterests { display:flex; flex-wrap:wrap; gap:7px; }
+.interest-chip { display:inline-flex !important; align-items:center; gap:6px; padding:7px 9px; border:1px solid var(--border); border-radius:999px; color:var(--text-2); font-size:11px !important; cursor:pointer; }
+.interest-chip input { width:14px !important; height:14px; padding:0 !important; accent-color:var(--blue); }
+.plan-outline { min-height:0; padding:0; color:var(--text-2); font-size:12px; line-height:1.6; }
+.plan-outline:not(:empty) { padding:12px; border:1px solid var(--border-hi); border-radius:10px; background:var(--blue-dim); }
+.plan-outline ul { margin:8px 0 8px 18px; }
 .plan-fields textarea { resize: vertical; min-height: 110px; }
 .plan-checklist { display: flex; flex-direction: column; gap: 8px; }
 .plan-task { display: flex; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; cursor: pointer; }

@@ -18,6 +18,7 @@ const TX = {
     searchPlaceholder: 'İstanbul, Paris, Tokyo…',
     searchBtn: 'Ara',
     planTitle: 'Seyahat Planım', planDate: 'Seyahat tarihi', planNotes: 'Gezi notları',
+    planEndDate: 'Bitiş tarihi', planPeople: 'Kişi sayısı', planBudget: 'Toplam bütçe', planCurrency: 'Bütçe para birimi', planPace: 'Seyahat temposu', planInterests: 'İlgi alanları', planGenerate: 'Plan taslağı oluştur', paceRelaxed: 'Rahat', paceBalanced: 'Dengeli', paceActive: 'Yoğun', interestHistory: 'Tarih', interestNature: 'Doğa', interestMuseums: 'Müzeler', interestFood: 'Gastronomi', interestArt: 'Sanat', interestShopping: 'Alışveriş', interestFamily: 'Aile', interestNightlife: 'Gece hayatı', planOutlineNeedDates: 'Taslak için başlangıç ve bitiş tarihi seçin.', planOutlineTitle: 'Kurala dayalı seyahat taslağı', planOutlineBudget: 'Tahmini bütçe dağılımı', planOutlineDay: (day, focus) => `${day}. gün · ${focus}`, planOutlineTransit: 'Ulaşım ve beklenmeyen gecikmeler için günlük esnek zaman bırakın.',
     planPlaceholder: 'Görmek istediğin yerler, rezervasyonlar, hatırlatmalar…',
     planExport: 'Planı indir (.txt)', planSaved: 'Bu tarayıcıya kaydedildi',
     planReady: 'Değişiklikler bu tarayıcıya otomatik kaydedilir.',
@@ -134,6 +135,7 @@ const TX = {
     searchPlaceholder: 'Istanbul, Paris, Tokyo…',
     searchBtn: 'Search',
     planTitle: 'My Trip Plan', planDate: 'Travel date', planNotes: 'Trip notes',
+    planEndDate: 'End date', planPeople: 'Travellers', planBudget: 'Total budget', planCurrency: 'Budget currency', planPace: 'Travel pace', planInterests: 'Interests', planGenerate: 'Create trip outline', paceRelaxed: 'Relaxed', paceBalanced: 'Balanced', paceActive: 'Active', interestHistory: 'History', interestNature: 'Nature', interestMuseums: 'Museums', interestFood: 'Food', interestArt: 'Art', interestShopping: 'Shopping', interestFamily: 'Family', interestNightlife: 'Nightlife', planOutlineNeedDates: 'Choose a start and end date to create an outline.', planOutlineTitle: 'Rule-based trip outline', planOutlineBudget: 'Estimated budget split', planOutlineDay: (day, focus) => `Day ${day} · ${focus}`, planOutlineTransit: 'Leave flexible daily time for transport and unexpected delays.',
     planPlaceholder: 'Places to visit, reservations, reminders…',
     planExport: 'Download plan (.txt)', planSaved: 'Saved in this browser',
     planReady: 'Changes are saved automatically in this browser.',
@@ -859,6 +861,7 @@ function updatePageMetadata(ctx) {
 // City-local travel plans; independent of network data and shared links.
 const PLAN_KEY = 'wandex_plans_v1';
 const PLAN_TASKS = ['taskDocuments', 'taskBooking', 'taskInsurance', 'taskCharger', 'taskClothes'];
+const PLAN_INTERESTS = ['interestHistory', 'interestNature', 'interestMuseums', 'interestFood', 'interestArt', 'interestShopping', 'interestFamily', 'interestNightlife'];
 let planCityKey = null, planDraft = null, planStored = true;
 const planMemory = new Map();
 
@@ -869,6 +872,12 @@ function tripCityKey(ctx) {
 function normalizePlan(raw) {
   return {
     date: typeof raw?.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.date) ? raw.date : '',
+    endDate: typeof raw?.endDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.endDate) ? raw.endDate : '',
+    people: Number.isInteger(Number(raw?.people)) && Number(raw.people) >= 1 && Number(raw.people) <= 20 ? Number(raw.people) : 1,
+    budget: Number.isFinite(Number(raw?.budget)) && Number(raw.budget) >= 0 ? Number(raw.budget) : '',
+    currency: ['USD','EUR','TRY','GBP'].includes(raw?.currency) ? raw.currency : 'USD',
+    pace: ['relaxed','balanced','active'].includes(raw?.pace) ? raw.pace : 'balanced',
+    interests: PLAN_INTERESTS.filter(key => Array.isArray(raw?.interests) && raw.interests.includes(key)),
     notes: typeof raw?.notes === 'string' ? raw.notes.slice(0, 4000) : '',
     checked: PLAN_TASKS.filter(key => Array.isArray(raw?.checked) && raw.checked.includes(key))
   };
@@ -897,9 +906,22 @@ function renderTripPlan() {
   }
   el('planCity').textContent = lastCtx ? cityLabel(lastCtx) : '—';
   el('planDate').value = planDraft.date;
+  el('planEndDate').value = planDraft.endDate;
+  el('planPeople').value = planDraft.people;
+  el('planBudget').value = planDraft.budget;
+  el('planCurrency').value = planDraft.currency;
+  el('planPace').value = planDraft.pace;
   el('planNotes').value = planDraft.notes;
   el('planNotes').placeholder = t('planPlaceholder');
-  el('planDate').disabled = el('planNotes').disabled = el('btnExportPlan').disabled = !lastCtx;
+  ['planDate','planEndDate','planPeople','planBudget','planCurrency','planPace','planNotes','btnExportPlan','btnPlanOutline'].forEach(id => el(id).disabled = !lastCtx);
+  const interests = el('planInterests');
+  interests.textContent = '';
+  PLAN_INTERESTS.forEach(key => {
+    const label = document.createElement('label'); label.className = 'interest-chip';
+    const box = document.createElement('input'); box.type = 'checkbox'; box.checked = planDraft.interests.includes(key); box.disabled = !lastCtx;
+    box.addEventListener('change', () => { planDraft.interests = box.checked ? [...new Set([...planDraft.interests,key])] : planDraft.interests.filter(item => item !== key); persistTripPlan(); });
+    const text = document.createElement('span'); text.textContent = t(key); label.appendChild(box); label.appendChild(text); interests.appendChild(label);
+  });
   const list = el('planChecklist');
   list.textContent = '';
   PLAN_TASKS.forEach(key => {
@@ -922,6 +944,22 @@ function renderTripPlan() {
   renderPlanStatus();
 }
 
+function daysBetween(start, end) {
+  const a = Date.parse(`${start}T00:00:00Z`), b = Date.parse(`${end}T00:00:00Z`);
+  return Number.isFinite(a) && Number.isFinite(b) && b >= a ? Math.min(21, Math.round((b - a) / 86400000) + 1) : 0;
+}
+
+function renderPlanOutline() {
+  const output = el('planOutline');
+  const days = daysBetween(planDraft?.date, planDraft?.endDate);
+  if (!days) { output.textContent = t('planOutlineNeedDates'); return; }
+  const focus = planDraft.interests.length ? planDraft.interests.map(key => t(key)) : [t('interestHistory'), t('interestFood'), t('interestArt')];
+  const daily = Array.from({length:days}, (_, index) => `<li>${escapeHtml(t('planOutlineDay', index + 1, focus[index % focus.length]))}</li>`).join('');
+  const total = Number(planDraft.budget);
+  const split = Number.isFinite(total) && total > 0 ? `<p>${escapeHtml(t('planOutlineBudget'))}: ${escapeHtml(new Intl.NumberFormat(loc(), {style:'currency', currency:planDraft.currency, maximumFractionDigits:0}).format(total * .45))} · 45% / ${escapeHtml(new Intl.NumberFormat(loc(), {style:'currency', currency:planDraft.currency, maximumFractionDigits:0}).format(total * .35))} · 35% / ${escapeHtml(new Intl.NumberFormat(loc(), {style:'currency', currency:planDraft.currency, maximumFractionDigits:0}).format(total * .20))} · 20%</p>` : '';
+  output.innerHTML = `<strong>${escapeHtml(t('planOutlineTitle'))}</strong><ul>${daily}</ul>${split}<p>${escapeHtml(t('planOutlineTransit'))}</p>`;
+}
+
 function persistTripPlan() {
   if (!lastCtx || !planCityKey || !planDraft) return;
   const plans = readPlans();
@@ -937,7 +975,8 @@ function tripPlanText() {
   return [
     `Wandex · ${t('planTitle')}`, `${lastCtx.name}, ${lastCtx.country}`,
     `${fmt(lastCtx.lat,4)}, ${fmt(lastCtx.lon,4)}`,
-    `${t('planDate')}: ${planDraft.date || '—'}`, '',
+    `${t('planDate')}: ${planDraft.date || '—'}`, `${t('planEndDate')}: ${planDraft.endDate || '—'}`, `${t('planPeople')}: ${planDraft.people}`, `${t('planBudget')}: ${planDraft.budget || '—'} ${planDraft.currency}`, '',
+    `${t('planInterests')}: ${planDraft.interests.map(key => t(key)).join(', ') || '—'}`,
     ...PLAN_TASKS.map(key => `[${planDraft.checked.includes(key) ? 'x' : ' '}] ${t(key)}`),
     '', t('planNotes'), planDraft.notes || '—'
   ].join('\n');
@@ -1716,10 +1755,8 @@ function bind() {
     if (event.key === '/' && !isTyping) { event.preventDefault(); el('q').focus(); }
     if (event.key === 'Escape') { closeSearchResults(); if (!isTyping) el('q').focus(); }
   });
-  el('planDate').addEventListener('change', () => {
-    if (!planDraft) return;
-    planDraft.date = el('planDate').value;
-    persistTripPlan();
+  [['planDate','date'],['planEndDate','endDate'],['planPeople','people'],['planBudget','budget'],['planCurrency','currency'],['planPace','pace']].forEach(([id,key]) => {
+    el(id).addEventListener('change', () => { if (!planDraft) return; planDraft[key] = el(id).value; persistTripPlan(); });
   });
   el('planNotes').addEventListener('input', () => {
     if (!planDraft) return;
@@ -1727,6 +1764,7 @@ function bind() {
     persistTripPlan();
   });
   el('btnExportPlan').addEventListener('click', exportTripPlan);
+  el('btnPlanOutline').addEventListener('click', renderPlanOutline);
   el('btnStartSearch').addEventListener('click', () => el('q').focus());
   el('btnExploreIstanbul').addEventListener('click', () => {
     el('q').value = 'Istanbul';

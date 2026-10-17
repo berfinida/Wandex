@@ -36,7 +36,7 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="style.css?v=20261017.5" />
+  <link rel="stylesheet" href="style.css?v=20261017.6" />
   <script type="application/ld+json">
     {
       "@context":"https://schema.org",
@@ -282,6 +282,19 @@
         <div class="plan-fields">
           <label for="planDate" data-i18n="planDate"></label>
           <input id="planDate" type="date" />
+          <label for="planEndDate" data-i18n="planEndDate"></label>
+          <input id="planEndDate" type="date" />
+          <div class="plan-inline-fields">
+            <label for="planPeople"><span data-i18n="planPeople"></span><input id="planPeople" type="number" min="1" max="20" value="1" /></label>
+            <label for="planBudget"><span data-i18n="planBudget"></span><input id="planBudget" type="number" min="0" step="1" /></label>
+          </div>
+          <label for="planCurrency" data-i18n="planCurrency"></label>
+          <select id="planCurrency"><option value="USD">USD</option><option value="EUR">EUR</option><option value="TRY">TRY</option><option value="GBP">GBP</option></select>
+          <label for="planPace" data-i18n="planPace"></label>
+          <select id="planPace"><option value="relaxed" data-i18n="paceRelaxed"></option><option value="balanced" data-i18n="paceBalanced"></option><option value="active" data-i18n="paceActive"></option></select>
+          <fieldset class="plan-interests"><legend data-i18n="planInterests"></legend><div id="planInterests"></div></fieldset>
+          <button id="btnPlanOutline" class="btn" type="button" data-i18n="planGenerate"></button>
+          <div id="planOutline" class="plan-outline" aria-live="polite"></div>
           <label for="planNotes" data-i18n="planNotes"></label>
           <textarea id="planNotes" rows="5" maxlength="4000"></textarea>
         </div>
@@ -349,7 +362,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="locales.js?v=20261017.5"></script>
-  <script src="app.js?v=20261017.5"></script>
+  <script src="locales.js?v=20261017.6"></script>
+  <script src="app.js?v=20261017.6"></script>
 </body>
 </html>
