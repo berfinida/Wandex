@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /legal/
+Disallow: /affiliate-disclosure/
 
 Sitemap: https://wandex-seven.vercel.app/sitemap.xml

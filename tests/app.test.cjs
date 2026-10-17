@@ -4,6 +4,7 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const source = fs.readFileSync('app.js', 'utf8');
 const page = fs.readFileSync('index.html', 'utf8');
+const sitemap = fs.readFileSync('sitemap.xml', 'utf8');
 
 function harness({ blockedStorage = false, stored = {} } = {}) {
   const nodes = new Map();
@@ -391,9 +392,9 @@ test('language packs cover the selector languages and interpolate translated pro
 });
 
 test('versioned local assets prevent a new page from using an immutable old translation script', () => {
-  assert.match(page, /href="style\.css\?v=20261017\.4"/);
-  assert.match(page, /src="locales\.js\?v=20261017\.4"/);
-  assert.match(page, /src="app\.js\?v=20261017\.4"/);
+  assert.match(page, /href="style\.css\?v=20261017\.5"/);
+  assert.match(page, /src="locales\.js\?v=20261017\.5"/);
+  assert.match(page, /src="app\.js\?v=20261017\.5"/);
 });
 
 test('offline state clearly marks that new live data cannot be retrieved', () => {
@@ -426,12 +427,45 @@ test('launch page includes a local, non-decorative-only visual asset and no-scri
   assert.match(page, /<noscript>/);
 });
 
-test('popular city searches choose a matching local visual and other cities keep the neutral fallback', () => {
+test('city visuals use coordinates and country identity, including localized names, and unknown cities stay neutral', () => {
   const h = harness();
-  h.run("renderCityHero('Paris')");
+  h.run("renderCityHero({name:'Paris',countryCode:'FR',lat:48.8566,lon:2.3522})");
   assert.equal(h.node('welcomeImage').src, 'assets-wandex-paris-hero.webp');
-  h.run("renderCityHero('New York City')");
-  assert.equal(h.node('welcomeImage').src, 'assets-wandex-new-york-hero.webp');
-  h.run("renderCityHero('Ankara')");
+  h.run("renderCityHero({name:'Londra',countryCode:'GB',lat:51.5072,lon:-0.1276})");
+  assert.equal(h.node('welcomeImage').src, 'assets-wandex-london-hero.webp');
+  h.run("renderCityHero({name:'İstanbul',countryCode:'TR',lat:41.0082,lon:28.9784})");
   assert.equal(h.node('welcomeImage').src, 'assets-wandex-istanbul-hero.webp');
+  h.run("renderCityHero({name:'New York City',countryCode:'US',lat:40.7128,lon:-74.006})");
+  assert.equal(h.node('welcomeImage').src, 'assets-wandex-new-york-hero.webp');
+  assert.equal(h.run("cityHeroFor({name:'Ankara',countryCode:'TR',lat:39.93,lon:32.86})"), null);
+});
+
+test('shared market requests are deduplicated until their TTL expires', async () => {
+  const h = harness();
+  let calls = 0;
+  h.context.getData = async () => ({value: ++calls});
+  const values = await h.run("Promise.all([cachedShared('rate', 60000, getData), cachedShared('rate', 60000, getData)])");
+  assert.equal(calls, 1);
+  assert.equal(values[0].value, 1);
+  assert.equal((await h.run("cachedShared('rate', 60000, getData)")).value, 1);
+});
+
+test('city guides are crawlable documents with unique metadata and live-panel links', () => {
+  const cities = ['istanbul', 'london', 'paris', 'tokyo', 'new-york'];
+  cities.forEach(city => {
+    const guide = fs.readFileSync(`en/city/${city}/index.html`, 'utf8');
+    assert.match(guide, /<title>[^<]+Wandex<\/title>/);
+    assert.match(guide, /<meta name="description"/);
+    assert.match(guide, /rel="canonical"/);
+    assert.match(guide, /Open [A-Za-z ]+ live panel/);
+    assert.match(sitemap, new RegExp(`/en/city/${city}/`));
+  });
+});
+
+test('affiliate configuration is disabled by default and commercial documentation is present', () => {
+  const config = fs.readFileSync('affiliate-config.js', 'utf8');
+  const readiness = fs.readFileSync('COMMERCIAL_READINESS.md', 'utf8');
+  assert.match(config, /enabled:false/);
+  assert.match(readiness, /Launch blockers/);
+  assert.match(readiness, /Open-Meteo/);
 });

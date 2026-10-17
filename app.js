@@ -732,21 +732,49 @@ function readUrlRestore() {
 let lastCtx=null, cW=null, cA=null, cH=null, cC=null, cCrypto=null, cFx=null, timeTicker=null, tempChart=null;
 let compareCtx=null, compareData=null;
 let renderVersion = 0, searchVersion = 0, compareVersion = 0;
+const sharedCache = new Map();
+const FX_CACHE_TTL = 30 * 60 * 1000;
+const CRYPTO_CACHE_TTL = 5 * 60 * 1000;
 
-const CITY_HEROES = {
-  istanbul: 'assets-wandex-istanbul-hero.webp',
-  london: 'assets-wandex-london-hero.webp',
-  paris: 'assets-wandex-paris-hero.webp',
-  tokyo: 'assets-wandex-tokyo-hero.webp',
-  'new york': 'assets-wandex-new-york-hero.webp',
-  'new york city': 'assets-wandex-new-york-hero.webp'
-};
+async function cachedShared(key, ttl, loader) {
+  const cached = sharedCache.get(key);
+  const now = Date.now();
+  if (cached?.data && now - cached.at < ttl) return cached.data;
+  if (cached?.promise) return cached.promise;
+  const promise = Promise.resolve().then(loader).then(data => {
+    sharedCache.set(key, {data, at:Date.now()});
+    return data;
+  }).finally(() => {
+    const entry = sharedCache.get(key);
+    if (entry?.promise) sharedCache.delete(key);
+  });
+  sharedCache.set(key, {promise});
+  return promise;
+}
 
-function renderCityHero(name) {
+const CITY_HEROES = [
+  {countryCode:'TR', lat:41.0082, lon:28.9784, aliases:['istanbul'], src:'assets-wandex-istanbul-hero.webp'},
+  {countryCode:'GB', lat:51.5072, lon:-0.1276, aliases:['london','londra'], src:'assets-wandex-london-hero.webp'},
+  {countryCode:'FR', lat:48.8566, lon:2.3522, aliases:['paris'], src:'assets-wandex-paris-hero.webp'},
+  {countryCode:'JP', lat:35.6762, lon:139.6503, aliases:['tokyo','tokio'], src:'assets-wandex-tokyo-hero.webp'},
+  {countryCode:'US', lat:40.7128, lon:-74.006, aliases:['new york','new york city'], src:'assets-wandex-new-york-hero.webp'}
+];
+
+function cityHeroFor(ctx) {
+  const name = String(ctx?.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const lat = Number(ctx?.lat), lon = Number(ctx?.lon);
+  return CITY_HEROES.find(hero => hero.countryCode === ctx?.countryCode && Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat - hero.lat) < .35 && Math.abs(lon - hero.lon) < .35)
+    || CITY_HEROES.find(hero => hero.countryCode === ctx?.countryCode && hero.aliases.includes(name))
+    || null;
+}
+
+function renderCityHero(ctx) {
   const image = el('welcomeImage');
   if (!image) return;
-  const key = String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-  image.src = CITY_HEROES[key] || CITY_HEROES.istanbul;
+  const hero = cityHeroFor(ctx);
+  image.classList?.toggle('is-neutral', !hero);
+  if (hero) image.src = hero.src;
+  else image.removeAttribute?.('src');
 }
 
 function updateHeader(ctx) {
@@ -759,7 +787,7 @@ function updateHeader(ctx) {
   renderTripPlan();
   updatePageMetadata(ctx);
   renderCityBrief();
-  renderCityHero(ctx.name);
+  renderCityHero(ctx);
 }
 
 function renderCityBrief() {
@@ -1447,7 +1475,12 @@ async function loadFavouriteByIndex(index) {
 // FX
 // ═══════════════════════════════════════════════
 async function loadFx(ctx, version = renderVersion) {
-  const d = await gfetch('https://open.er-api.com/v6/latest/USD');
+  const d = await cachedShared('fx-usd', FX_CACHE_TTL, async () => {
+    const payload = await gfetch('https://open.er-api.com/v6/latest/USD');
+    const rates = payload?.rates || {};
+    requireData(payload.result === 'success' && payload.base_code === 'USD' && ['TRY','EUR','GBP'].every(code => isNumber(rates[code]) && rates[code] > 0) && freshUnix(payload.time_last_update_unix, 48 * 60 * 60 * 1000));
+    return payload;
+  });
   if (version !== renderVersion) return;
   const r = d?.rates || {};
   requireData(d.result === 'success' && d.base_code === 'USD' && ['TRY','EUR','GBP'].every(code => isNumber(r[code]) && r[code] > 0) && freshUnix(d.time_last_update_unix, 48 * 60 * 60 * 1000));
@@ -1478,7 +1511,12 @@ function renderCrypto() {
 }
 
 async function loadCrypto(ctx, version = renderVersion) {
-  const data = await gfetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true');
+  const data = await cachedShared('crypto-usd', CRYPTO_CACHE_TTL, async () => {
+    const payload = await gfetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true');
+    const coins = ['bitcoin','ethereum','solana'];
+    requireData(coins.every(coin => isNumber(payload[coin]?.usd) && payload[coin].usd > 0 && freshUnix(payload[coin].last_updated_at, 15 * 60 * 1000)));
+    return payload;
+  });
   if (version !== renderVersion) return;
   const coins = ['bitcoin','ethereum','solana'];
   requireData(coins.every(coin => isNumber(data[coin]?.usd) && data[coin].usd > 0 && freshUnix(data[coin].last_updated_at, 15 * 60 * 1000)));

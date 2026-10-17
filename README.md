@@ -6,7 +6,7 @@
 
 ### Smart Travel Dashboard • API Data with Source Times • Interactive Map
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-000?style=for-the-badge\&logo=github)](https://berfinida.github.io/Wandex/)
+[![Live Site](https://img.shields.io/badge/Live-Site-000?style=for-the-badge)](https://wandex-seven.vercel.app/)
 [![HTML](https://img.shields.io/badge/HTML5-Structure-orange?style=for-the-badge\&logo=html5)]()
 [![CSS](https://img.shields.io/badge/CSS3-Styling-blue?style=for-the-badge\&logo=css3)]()
 [![JavaScript](https://img.shields.io/badge/JavaScript-Logic-yellow?style=for-the-badge\&logo=javascript)]()
@@ -15,7 +15,7 @@
 A modern **travel information dashboard** that gathers **data from multiple public APIs with source times** and presents them in a clean interactive interface.
 
 🌐 **Live Demo**
-https://berfinida.github.io/Wandex/
+https://wandex-seven.vercel.app/
 
 </div>
 
@@ -37,7 +37,7 @@ The application combines multiple external data sources to provide:
 
 All information is displayed through a **clean dashboard interface with an interactive map**.
 
-The goal of this project is to demonstrate how **multiple external APIs can be combined into a single modern web application**.
+Wandex is being developed as a user-facing travel platform. It keeps provider times and data limitations visible instead of substituting sample values.
 
 ---
 
@@ -282,6 +282,14 @@ This project was created to:
 The production page includes a canonical URL, robots rules, sitemap, web manifest, Open Graph and X/Twitter cards, a `WebApplication` JSON-LD schema, and a lightweight SVG favicon. Metadata points to `https://wandex-seven.vercel.app/`; update these URLs if the production domain changes.
 
 Vercel serves this build as a static site. `vercel.json` adds clean URLs, conservative cache behavior for the HTML shell, long-lived caching for immutable static assets, and browser security headers.
+
+## City guides, SEO and monetisation preparation
+
+Five server-readable English city guides are available at `/en/city/{istanbul,london,paris,tokyo,new-york}/`; an initial Turkish Istanbul guide is available at `/tr/sehir/istanbul/`. They contain evergreen planning content and link to the dynamic data panel, which keeps real-time and editorial information distinct. `sitemap.xml` lists the indexable English guides.
+
+Affiliate links are intentionally disabled in `affiliate-config.js`. Add only approved destination links after an affiliate agreement; the included guide script adds `rel="sponsored noopener noreferrer"`. No AdSense or analytics code is installed. Add a consent solution and reviewed policies before enabling either.
+
+See [COMMERCIAL_READINESS.md](COMMERCIAL_READINESS.md) for provider, consent, legal-contact and hosting items that must be resolved for commercial launch.
 
 ---
 

@@ -1,0 +1,1 @@
+(function(){const config=window.WANDEX_AFFILIATE||{};document.querySelectorAll('[data-affiliate]').forEach(link=>{const url=config.enabled&&config.partners?.[link.dataset.affiliate];if(url){link.href=url;link.hidden=false;link.rel='sponsored noopener noreferrer';}else link.hidden=true;});})();
