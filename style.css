@@ -1174,6 +1174,36 @@ footer { padding:38px 24px; }
   main{padding:16px 14px 64px}.header-inner{padding:10px 14px}.welcome-card{min-height:480px;padding:24px 20px;border-radius:22px}.welcome-card h1{font-size:39px}.welcome-copy{font-size:14px}.welcome-steps{grid-template-columns:1fr}.welcome-steps span{flex-direction:row;align-items:center;padding:10px 12px}.welcome-steps i{font-size:11px}.card{padding:19px;border-radius:18px}.compare-card{padding:19px}.quick-cities{overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px}.quick-chip{flex:0 0 auto}.city-name{font-size:38px}.kpis{gap:7px}.kpi{padding:13px}.kpi-val{font-size:26px}.plan-inline-fields{grid-template-columns:1fr}.welcome-actions .btn{width:100%}
 }
 
+/* Header refinement */
+header { top:12px; width:min(1360px,calc(100% - 32px)); margin:0 auto; border:1px solid var(--border); border-radius:18px; background:color-mix(in srgb,var(--header-bg) 88%,transparent); box-shadow:0 14px 34px rgba(3,10,25,.14); }
+.header-inner { padding:0 14px 0 18px; gap:12px; }
+.logo { gap:11px; min-width:142px; }
+.logo-lockup { display:grid; gap:1px; }
+.logo-name { line-height:1; }
+.logo-kicker { color:var(--text-3); font-size:8px; font-weight:800; letter-spacing:.13em; white-space:nowrap; }
+.h-div { height:28px; background:var(--border-hi); }
+.search-row { max-width:590px; margin-right:auto; }
+.search-input-wrap { filter:drop-shadow(0 4px 9px rgba(4,11,25,.07)); }
+.search-input { min-height:44px; border-color:transparent; background:var(--panel-bg); }
+.search-input:focus { background:var(--control-bg); border-color:var(--blue); }
+.search-row .btn-blue { min-width:82px; }
+.header-tools { display:flex; align-items:center; gap:8px; padding:5px; border:1px solid var(--border); border-radius:999px; background:var(--panel-bg); }
+.tools-divider { width:1px; height:18px; background:var(--border); }
+.header-tools .btn-icon { width:34px; height:34px; padding:0; border:0; background:transparent; }
+.header-tools .btn-icon:hover { background:var(--control-hover); }
+.header-tools .lang-select { min-height:34px; border:0; background:transparent; padding-right:24px; }
+.header-tools .fav-select { max-width:128px; border:0; background:transparent; }
+
+@media(max-width:900px){
+  header{top:8px;width:calc(100% - 20px)}
+  .header-inner{min-height:62px;padding:8px 10px 8px 14px}
+  .logo{min-width:auto}.logo-kicker{display:none}.h-div{display:none}
+  .search-row{order:3;flex-basis:100%;max-width:none;margin:0}.header-tools{margin-left:auto}
+}
+@media(max-width:510px){
+  header{border-radius:15px}.header-inner{gap:8px}.logo-mark{width:33px;height:33px}.logo-name{font-size:17px}.header-tools{gap:3px;padding:3px}.header-tools .fav-select,.tools-divider{display:none}.header-tools .lang-select{max-width:96px}.search-row .btn-blue{min-width:64px;padding-inline:11px}.search-input{font-size:13px}
+}
+
 /* Compact touch layout */
 @media (max-width: 760px) {
   .header-inner { height: auto; min-height: 58px; padding: 10px 16px; gap: 10px; flex-wrap: wrap; }
