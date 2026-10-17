@@ -304,6 +304,35 @@ test('daily FX requires a valid source timestamp and three numeric positive rate
   assert.match(h.node('sourceDetails').innerHTML, /Günlük kur/);
 });
 
+test('city brief derives packing suggestions only from loaded current conditions', () => {
+  const h = harness();
+  h.run(`lastCtx={name:'Antalya'};
+    cW={cw:{temperature:30,windspeed:36},times:['2027-01-01T12:00'],pop:[45]};
+    cA={aqiVal:120};
+    renderCityBrief();`);
+  assert.match(h.node('briefIntro').textContent, /Antalya/);
+  assert.match(h.node('briefMetrics').innerHTML, /30/);
+  assert.match(h.node('packingList').innerHTML, /Güneş koruyucu/);
+  assert.match(h.node('packingList').innerHTML, /Şemsiye veya yağmurluk/);
+  assert.match(h.node('packingList').innerHTML, /açık hava etkinliklerini/);
+  h.run('cW=null; cA=null; renderCityBrief();');
+  assert.match(h.node('briefIntro').textContent, /Şehir verileri yüklendiğinde/);
+  assert.equal(h.node('packingList').textContent, '');
+});
+
+test('budget converter waits for valid daily rates and recalculates from USD input', () => {
+  const h = harness();
+  h.node('budgetAmount').value = '100';
+  h.run('cFx={rates:{TRY:30,EUR:0.9,GBP:0.8}}; renderBudgetConverter();');
+  assert.match(h.node('budgetResults').innerHTML, /TRY/);
+  assert.match(h.node('budgetResults').innerHTML, /EUR/);
+  assert.match(h.node('budgetResults').innerHTML, /GBP/);
+  assert.match(h.node('budgetMeta').textContent, /günlük USD kuru/);
+  h.node('budgetAmount').value = '-1';
+  h.run('renderBudgetConverter();');
+  assert.match(h.node('budgetResults').textContent, /Kur verisi yüklendiğinde/);
+});
+
 test('comparison does not display outdated weather or AQI as current', async () => {
   const h = harness();
   h.run(`cityNow = () => '2027-01-01T14:00';
