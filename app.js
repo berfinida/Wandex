@@ -128,6 +128,7 @@ const TX = {
     briefNote: 'Öneriler yalnızca yüklenen hava durumu ve hava kalitesi verilerinden türetilir; kişisel sağlık veya resmi seyahat tavsiyesi değildir.',
     budgetTitle: 'Hızlı bütçe dönüşümü', budgetCopy: 'USD tutarını mevcut günlük kurla yaklaşık karşılığına çevir.', budgetAmount: 'USD tutarı', budgetWaiting: 'Kur verisi yüklendiğinde sonuçlar görünür.', budgetMeta: 'Kaynak günlük USD kuru; banka veya kart komisyonları dahil değildir.',
     offlineNotice: 'İnternet bağlantısı yok. Yeni veri alınana kadar son doğrulanmış ekran bilgileri gösterilir.',
+    welcomeStart: 'Şehir ara', welcomeExplore: 'İstanbul’u keşfet', welcomeTrust: 'Canlı kaynak zamanı görünür · Eksik veya doğrulanamayan veri açıkça işaretlenir',
   },
   en: {
     searchPlaceholder: 'Istanbul, Paris, Tokyo…',
@@ -243,6 +244,7 @@ const TX = {
     briefNote: 'Suggestions use only the loaded weather and air-quality fields. They are not personal health or official travel advice.',
     budgetTitle: 'Quick budget converter', budgetCopy: 'Convert a USD amount using the current daily reference rate.', budgetAmount: 'USD amount', budgetWaiting: 'Results will appear when exchange-rate data loads.', budgetMeta: 'Daily USD reference rate; bank and card fees are not included.',
     offlineNotice: 'You are offline. The screen keeps only the last verified information until a new connection is available.',
+    welcomeStart: 'Search a city', welcomeExplore: 'Explore Istanbul', welcomeTrust: 'Source times stay visible · Missing or unverified data is clearly marked',
   }
 };
 
@@ -1670,6 +1672,12 @@ function bind() {
   document.addEventListener('visibilitychange', refreshIfDue);
   window.addEventListener('online', () => { setNetworkStatus(true); lastRefreshAt = 0; refreshIfDue(); });
   window.addEventListener('offline', () => setNetworkStatus(false));
+  document.addEventListener('keydown', event => {
+    const target = event.target;
+    const isTyping = /^(INPUT|TEXTAREA|SELECT)$/i.test(target?.tagName || '');
+    if (event.key === '/' && !isTyping) { event.preventDefault(); el('q').focus(); }
+    if (event.key === 'Escape') { closeSearchResults(); if (!isTyping) el('q').focus(); }
+  });
   el('planDate').addEventListener('change', () => {
     if (!planDraft) return;
     planDraft.date = el('planDate').value;
@@ -1681,6 +1689,11 @@ function bind() {
     persistTripPlan();
   });
   el('btnExportPlan').addEventListener('click', exportTripPlan);
+  el('btnStartSearch').addEventListener('click', () => el('q').focus());
+  el('btnExploreIstanbul').addEventListener('click', () => {
+    el('q').value = 'Istanbul';
+    doSearch(true);
+  });
   el('budgetAmount').addEventListener('input', renderBudgetConverter);
   el('btnCelsius').addEventListener('click', () => setTemperatureUnit('c'));
   el('btnFahrenheit').addEventListener('click', () => setTemperatureUnit('f'));

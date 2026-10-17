@@ -391,9 +391,9 @@ test('language packs cover the selector languages and interpolate translated pro
 });
 
 test('versioned local assets prevent a new page from using an immutable old translation script', () => {
-  assert.match(page, /href="style\.css\?v=20261017\.3"/);
-  assert.match(page, /src="locales\.js\?v=20261017\.3"/);
-  assert.match(page, /src="app\.js\?v=20261017\.3"/);
+  assert.match(page, /href="style\.css\?v=20261017\.4"/);
+  assert.match(page, /src="locales\.js\?v=20261017\.4"/);
+  assert.match(page, /src="app\.js\?v=20261017\.4"/);
 });
 
 test('offline state clearly marks that new live data cannot be retrieved', () => {
@@ -403,6 +403,17 @@ test('offline state clearly marks that new live data cannot be retrieved', () =>
   assert.match(h.node('networkStatus').textContent, /İnternet bağlantısı yok/);
   h.run('setNetworkStatus(true);');
   assert.equal(h.node('networkStatus').hidden, true);
+});
+
+test('welcome actions focus search or start an explicit Istanbul search', () => {
+  const h = harness();
+  let searches = 0;
+  h.run('doSearch = () => { onSearch(); };');
+  h.context.onSearch = () => { searches++; };
+  h.run("bind(); el('btnStartSearch').events.click();");
+  h.run("el('btnExploreIstanbul').events.click();");
+  assert.equal(h.node('q').value, 'Istanbul');
+  assert.equal(searches, 1);
 });
 
 test('launch page includes a local, non-decorative-only visual asset and no-script guidance', () => {
