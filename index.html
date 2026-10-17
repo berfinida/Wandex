@@ -116,6 +116,20 @@
       <div class="recent-title" data-i18n="recentSearches"></div>
       <div class="recent-list" id="recentList"></div>
     </div>
+
+    <section class="welcome-card" aria-labelledby="welcomeTitle">
+      <div>
+        <p class="eyebrow" data-i18n="welcomeEyebrow"></p>
+        <h1 id="welcomeTitle" data-i18n="welcomeTitle"></h1>
+        <p class="welcome-copy" data-i18n="welcomeCopy"></p>
+      </div>
+      <div class="welcome-steps" aria-label="How Wandex works">
+        <span><b>01</b><i data-i18n="welcomeStepSearch"></i></span>
+        <span><b>02</b><i data-i18n="welcomeStepCompare"></i></span>
+        <span><b>03</b><i data-i18n="welcomeStepPlan"></i></span>
+      </div>
+    </section>
+
     <div class="card compare-card">
       <div class="section-label"><span data-i18n="compareTitle"></span></div>
       <div class="compare-top">
@@ -135,6 +149,29 @@
         <div id="compareRows"></div>
       </div>
     </div>
+
+    <section class="brief-grid" aria-label="Travel brief">
+      <article class="card city-brief" aria-labelledby="briefTitle">
+        <div class="section-label" id="briefTitle" data-i18n="briefTitle"></div>
+        <p id="briefIntro" class="brief-intro" aria-live="polite"></p>
+        <div id="briefMetrics" class="brief-metrics"></div>
+        <div class="packing-title" data-i18n="packingTitle"></div>
+        <div id="packingList" class="packing-list"></div>
+        <p class="brief-note" data-i18n="briefNote"></p>
+      </article>
+
+      <article class="card budget-card" aria-labelledby="budgetTitle">
+        <div class="section-label" id="budgetTitle" data-i18n="budgetTitle"></div>
+        <p class="budget-copy" data-i18n="budgetCopy"></p>
+        <label class="budget-input-label" for="budgetAmount" data-i18n="budgetAmount"></label>
+        <div class="budget-input-wrap">
+          <span>USD</span>
+          <input id="budgetAmount" inputmode="decimal" type="number" min="0" step="0.01" value="100" />
+        </div>
+        <div id="budgetResults" class="budget-results" aria-live="polite"></div>
+        <p id="budgetMeta" class="brief-note"></p>
+      </article>
+    </section>
 
     <!-- HERO -->
     <div class="card">

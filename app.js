@@ -117,6 +117,16 @@ const TX = {
     languageLabel: 'Dil', skipContent: 'İçeriğe geç', quickCities: 'Hızlı şehirler',
     chartLabel: '24 saatlik sıcaklık eğilimi grafiği', aqiLevel: 'AQI seviyesi', builtBy: 'Geliştiren',
     durationHours: 'sa', durationMinutes: 'dk',
+    welcomeEyebrow: 'Akıllı şehir rehberi', welcomeTitle: 'Bir sonraki durağını daha bilinçli seç.',
+    welcomeCopy: 'Güncel kaynak zamanlarıyla hava, hava kalitesi, tatil takvimi ve planını tek görünümde takip et.',
+    welcomeStepSearch: 'Şehir ara', welcomeStepCompare: 'Koşulları karşılaştır', welcomeStepPlan: 'Planını kaydet',
+    briefTitle: 'Şehir özeti', packingTitle: 'Hazırlık önerileri',
+    briefWaiting: 'Şehir verileri yüklendiğinde burası güncel koşullara göre hazırlanır.',
+    briefIntro: (city) => `${city} için mevcut koşullar`, briefTemp: 'Sıcaklık', briefRain: 'Yağış olasılığı', briefAir: 'Hava kalitesi', briefWind: 'Rüzgar',
+    packBase: 'Telefon ve şarj cihazı', packWarm: 'Katmanlı bir üstlük', packCold: 'Kalın mont ve sıcak tutan katmanlar',
+    packHot: 'Güneş koruyucu ve su', packRain: 'Şemsiye veya yağmurluk', packWind: 'Rüzgarlık', packAir: 'Uzun açık hava etkinliklerini sınırlamayı düşün',
+    briefNote: 'Öneriler yalnızca yüklenen hava durumu ve hava kalitesi verilerinden türetilir; kişisel sağlık veya resmi seyahat tavsiyesi değildir.',
+    budgetTitle: 'Hızlı bütçe dönüşümü', budgetCopy: 'USD tutarını mevcut günlük kurla yaklaşık karşılığına çevir.', budgetAmount: 'USD tutarı', budgetWaiting: 'Kur verisi yüklendiğinde sonuçlar görünür.', budgetMeta: 'Kaynak günlük USD kuru; banka veya kart komisyonları dahil değildir.',
   },
   en: {
     searchPlaceholder: 'Istanbul, Paris, Tokyo…',
@@ -221,6 +231,16 @@ const TX = {
     languageLabel: 'Language', skipContent: 'Skip to content', quickCities: 'Quick cities',
     chartLabel: '24-hour temperature trend chart', aqiLevel: 'AQI level', builtBy: 'Built by',
     durationHours: 'h', durationMinutes: 'm',
+    welcomeEyebrow: 'Smart city guide', welcomeTitle: 'Choose your next stop with more confidence.',
+    welcomeCopy: 'Track weather, air quality, holiday calendars, and your plan in one view with source-time transparency.',
+    welcomeStepSearch: 'Search a city', welcomeStepCompare: 'Compare conditions', welcomeStepPlan: 'Save your plan',
+    briefTitle: 'City brief', packingTitle: 'What to bring',
+    briefWaiting: 'This panel will use the current conditions once city data is available.',
+    briefIntro: (city) => `Current conditions for ${city}`, briefTemp: 'Temperature', briefRain: 'Rain chance', briefAir: 'Air quality', briefWind: 'Wind',
+    packBase: 'Phone and charger', packWarm: 'A light extra layer', packCold: 'A warm coat and insulating layers',
+    packHot: 'Sun protection and water', packRain: 'Umbrella or rain jacket', packWind: 'Windbreaker', packAir: 'Consider limiting long outdoor activities',
+    briefNote: 'Suggestions use only the loaded weather and air-quality fields. They are not personal health or official travel advice.',
+    budgetTitle: 'Quick budget converter', budgetCopy: 'Convert a USD amount using the current daily reference rate.', budgetAmount: 'USD amount', budgetWaiting: 'Results will appear when exchange-rate data loads.', budgetMeta: 'Daily USD reference rate; bank and card fees are not included.',
   }
 };
 
@@ -315,6 +335,8 @@ function applyLang() {
   } else {
     el('placeTitle').textContent = t('heroDefault');
   }
+  renderCityBrief();
+  renderBudgetConverter();
 }
 
 function setLang(l) { if (!TX[l]) return; lang = l; storage.setItem(LANG_KEY, l); applyLang(); }
@@ -702,7 +724,7 @@ function readUrlRestore() {
 // ═══════════════════════════════════════════════
 // STATE + CACHES
 // ═══════════════════════════════════════════════
-let lastCtx=null, cW=null, cA=null, cH=null, cC=null, cCrypto=null, timeTicker=null, tempChart=null;
+let lastCtx=null, cW=null, cA=null, cH=null, cC=null, cCrypto=null, cFx=null, timeTicker=null, tempChart=null;
 let compareCtx=null, compareData=null;
 let renderVersion = 0, searchVersion = 0, compareVersion = 0;
 
@@ -715,6 +737,62 @@ function updateHeader(ctx) {
   syncFavouriteButton();
   renderTripPlan();
   updatePageMetadata(ctx);
+  renderCityBrief();
+}
+
+function renderCityBrief() {
+  const intro = el('briefIntro');
+  const metrics = el('briefMetrics');
+  const packing = el('packingList');
+  if (!intro || !metrics || !packing) return;
+  const temp = cW?.cw?.temperature;
+  const wind = cW?.cw?.windspeed;
+  const rain = currentRainProb();
+  const aqi = cA?.aqiVal;
+  if (!lastCtx || [temp, wind, rain, aqi].every(value => value == null || !Number.isFinite(Number(value)))) {
+    intro.textContent = t('briefWaiting');
+    metrics.textContent = '';
+    packing.textContent = '';
+    return;
+  }
+  intro.textContent = t('briefIntro', lastCtx.name);
+  const values = [
+    ['🌡', t('briefTemp'), formatTemperature(temp)],
+    ['💧', t('briefRain'), rain == null ? '—' : `${fmt(rain, 0)}%`],
+    ['🌬', t('briefWind'), wind == null ? '—' : `${fmt(wind, 0)} km/h`],
+    ['◌', t('briefAir'), aqi == null ? '—' : `${fmt(aqi, 0)} · ${aqiTxt(aqi)}`]
+  ];
+  metrics.innerHTML = values.map(([icon, label, value]) => `<div class="brief-metric"><span>${icon}</span><div><small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong></div></div>`).join('');
+  const suggestions = [{icon:'🔋', text:t('packBase')}];
+  if (Number.isFinite(Number(temp))) {
+    if (temp <= 7) suggestions.push({icon:'🧥', text:t('packCold')});
+    else if (temp <= 18) suggestions.push({icon:'🧶', text:t('packWarm')});
+    else if (temp >= 27) suggestions.push({icon:'🧴', text:t('packHot')});
+  }
+  if (Number.isFinite(Number(rain)) && rain >= 35) suggestions.push({icon:'☔', text:t('packRain')});
+  if (Number.isFinite(Number(wind)) && wind >= 30) suggestions.push({icon:'🧥', text:t('packWind')});
+  if (Number.isFinite(Number(aqi)) && aqi > 100) suggestions.push({icon:'🌫', text:t('packAir')});
+  packing.innerHTML = suggestions.map(item => `<span class="packing-chip"><b>${item.icon}</b>${escapeHtml(item.text)}</span>`).join('');
+}
+
+function renderBudgetConverter() {
+  const output = el('budgetResults');
+  const meta = el('budgetMeta');
+  const input = el('budgetAmount');
+  if (!output || !meta || !input) return;
+  const amount = Number(input.value);
+  const rates = cFx?.rates;
+  if (!rates || !Number.isFinite(amount) || amount < 0) {
+    output.textContent = t('budgetWaiting');
+    meta.textContent = '';
+    return;
+  }
+  const currencies = ['TRY', 'EUR', 'GBP'];
+  output.innerHTML = currencies.map(code => {
+    const value = amount * rates[code];
+    return `<div class="budget-result"><span>${code}</span><strong>${new Intl.NumberFormat(loc(), {style:'currency', currency:code, maximumFractionDigits: code === 'TRY' ? 0 : 2}).format(value)}</strong></div>`;
+  }).join('');
+  meta.textContent = t('budgetMeta');
 }
 
 function updatePageMetadata(ctx) {
@@ -1113,6 +1191,7 @@ async function loadWeather(ctx, version = renderVersion) {
   recordSource('Open-Meteo Weather', d.current_weather.time, d.timezone || ctx.timezone);
   cW={cw:d.current_weather,times:d.hourly?.time||[],t2m:d.hourly?.temperature_2m||[],pop:d.hourly?.precipitation_probability||[],wnd:d.hourly?.windspeed_10m||[],wcode:d.hourly?.weathercode||[],dtime:d.daily?.time||[],tmax:d.daily?.temperature_2m_max||[],tmin:d.daily?.temperature_2m_min||[],dpop:d.daily?.precipitation_probability_max||[],dwc:d.daily?.weathercode||[]};
   renderWeather();
+  renderCityBrief();
 }
 
 // ═══════════════════════════════════════════════
@@ -1155,6 +1234,7 @@ function renderAir() {
   el('aqiLabel').textContent= aqiVal!=null?aqiTxt(aqiVal):'';
   renderAqiBar(aqiVal);
   renderTravelScore();
+  renderCityBrief();
   const rows=[
     {l:'AQI',     v:fmt(aqiVal,0), clr:aqiVal!=null?aqiClr(aqiVal):''},
     {l:'PM 2.5',  v:`${fmt(pm25,1)} µg/m³`},
@@ -1350,9 +1430,11 @@ async function loadFx(ctx, version = renderVersion) {
   const r = d?.rates || {};
   requireData(d.result === 'success' && d.base_code === 'USD' && ['TRY','EUR','GBP'].every(code => isNumber(r[code]) && r[code] > 0) && freshUnix(d.time_last_update_unix, 48 * 60 * 60 * 1000));
   recordSource('Exchange rates', new Date(d.time_last_update_unix * 1000).toISOString());
+  cFx = {rates:r, updatedAt:d.time_last_update_unix};
   el('fxTry').textContent=r.TRY?fmt(r.TRY,2):'—';
   el('fxEur').textContent=r.EUR?fmt(r.EUR,4):'—';
   el('fxGbp').textContent=r.GBP?fmt(r.GBP,4):'—';
+  renderBudgetConverter();
 }
 
 // ═══════════════════════════════════════════════
@@ -1452,8 +1534,10 @@ async function loadHolidays(ctx, version = renderVersion) {
 // RENDER ALL
 // ═══════════════════════════════════════════════
 function resetCityData() {
-  cW = cA = cH = cC = cCrypto = null;
+  cW = cA = cH = cC = cCrypto = cFx = null;
   renderBestDay();
+  renderCityBrief();
+  renderBudgetConverter();
   destroyTempChart();
   ['kpiTemp','kpiWind','kpiAqi','sunrise','sunset','daylen','weatherNow','country','holidays','fxTry','fxEur','fxGbp'].forEach(id => el(id).textContent = '—');
   ['hourly','daily','air','crypto','aqiLabel','holidayYear'].forEach(id => el(id).textContent = '');
@@ -1569,6 +1653,7 @@ function bind() {
     persistTripPlan();
   });
   el('btnExportPlan').addEventListener('click', exportTripPlan);
+  el('budgetAmount').addEventListener('input', renderBudgetConverter);
   el('btnCelsius').addEventListener('click', () => setTemperatureUnit('c'));
   el('btnFahrenheit').addEventListener('click', () => setTemperatureUnit('f'));
   el('langSelect').addEventListener('change', event => setLang(event.target.value));
