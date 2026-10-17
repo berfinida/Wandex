@@ -392,9 +392,9 @@ test('language packs cover the selector languages and interpolate translated pro
 });
 
 test('versioned local assets prevent a new page from using an immutable old translation script', () => {
-  assert.match(page, /href="style\.css\?v=20261017\.6"/);
-  assert.match(page, /src="locales\.js\?v=20261017\.6"/);
-  assert.match(page, /src="app\.js\?v=20261017\.6"/);
+  assert.match(page, /href="style\.css\?v=20261017\.7"/);
+  assert.match(page, /src="locales\.js\?v=20261017\.7"/);
+  assert.match(page, /src="app\.js\?v=20261017\.7"/);
 });
 
 test('offline state clearly marks that new live data cannot be retrieved', () => {
