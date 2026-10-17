@@ -127,6 +127,7 @@ const TX = {
     packHot: 'Güneş koruyucu ve su', packRain: 'Şemsiye veya yağmurluk', packWind: 'Rüzgarlık', packAir: 'Uzun açık hava etkinliklerini sınırlamayı düşün',
     briefNote: 'Öneriler yalnızca yüklenen hava durumu ve hava kalitesi verilerinden türetilir; kişisel sağlık veya resmi seyahat tavsiyesi değildir.',
     budgetTitle: 'Hızlı bütçe dönüşümü', budgetCopy: 'USD tutarını mevcut günlük kurla yaklaşık karşılığına çevir.', budgetAmount: 'USD tutarı', budgetWaiting: 'Kur verisi yüklendiğinde sonuçlar görünür.', budgetMeta: 'Kaynak günlük USD kuru; banka veya kart komisyonları dahil değildir.',
+    offlineNotice: 'İnternet bağlantısı yok. Yeni veri alınana kadar son doğrulanmış ekran bilgileri gösterilir.',
   },
   en: {
     searchPlaceholder: 'Istanbul, Paris, Tokyo…',
@@ -241,6 +242,7 @@ const TX = {
     packHot: 'Sun protection and water', packRain: 'Umbrella or rain jacket', packWind: 'Windbreaker', packAir: 'Consider limiting long outdoor activities',
     briefNote: 'Suggestions use only the loaded weather and air-quality fields. They are not personal health or official travel advice.',
     budgetTitle: 'Quick budget converter', budgetCopy: 'Convert a USD amount using the current daily reference rate.', budgetAmount: 'USD amount', budgetWaiting: 'Results will appear when exchange-rate data loads.', budgetMeta: 'Daily USD reference rate; bank and card fees are not included.',
+    offlineNotice: 'You are offline. The screen keeps only the last verified information until a new connection is available.',
   }
 };
 
@@ -299,6 +301,7 @@ function applyLang() {
   el('aqiBarWrap').setAttribute('aria-label', t('aqiLevel'));
   el('builtBy').textContent = t('builtBy');
   document.querySelectorAll('[data-i18n]').forEach(n => { n.textContent = t(n.dataset.i18n); });
+  setNetworkStatus();
   el('q').placeholder = t('searchPlaceholder');
   el('q').setAttribute('aria-label', t('searchPlaceholder'));
   el('compareQ').setAttribute('aria-label', t('comparePlaceholder'));
@@ -728,6 +731,22 @@ let lastCtx=null, cW=null, cA=null, cH=null, cC=null, cCrypto=null, cFx=null, ti
 let compareCtx=null, compareData=null;
 let renderVersion = 0, searchVersion = 0, compareVersion = 0;
 
+const CITY_HEROES = {
+  istanbul: 'assets-wandex-istanbul-hero.webp',
+  london: 'assets-wandex-london-hero.webp',
+  paris: 'assets-wandex-paris-hero.webp',
+  tokyo: 'assets-wandex-tokyo-hero.webp',
+  'new york': 'assets-wandex-new-york-hero.webp',
+  'new york city': 'assets-wandex-new-york-hero.webp'
+};
+
+function renderCityHero(name) {
+  const image = el('welcomeImage');
+  if (!image) return;
+  const key = String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  image.src = CITY_HEROES[key] || CITY_HEROES.istanbul;
+}
+
 function updateHeader(ctx) {
   el('placeTitle').textContent = `${ctx.name}, ${ctx.country}`;
   el('placeMeta').textContent = `${ctx.countryCode} · ${ctx.lat?.toFixed(3)}°, ${ctx.lon?.toFixed(3)}°`;
@@ -738,6 +757,7 @@ function updateHeader(ctx) {
   renderTripPlan();
   updatePageMetadata(ctx);
   renderCityBrief();
+  renderCityHero(ctx.name);
 }
 
 function renderCityBrief() {
@@ -1635,13 +1655,21 @@ async function copyShareLink() {
   }
 }
 
+function setNetworkStatus(online = navigator.onLine !== false) {
+  const status = el('networkStatus');
+  if (!status) return;
+  status.hidden = online;
+  status.textContent = online ? '' : t('offlineNotice');
+}
+
 // ═══════════════════════════════════════════════
 // BIND
 // ═══════════════════════════════════════════════
 function bind() {
   setInterval(refreshIfDue, 60 * 1000);
   document.addEventListener('visibilitychange', refreshIfDue);
-  window.addEventListener('online', () => { lastRefreshAt = 0; refreshIfDue(); });
+  window.addEventListener('online', () => { setNetworkStatus(true); lastRefreshAt = 0; refreshIfDue(); });
+  window.addEventListener('offline', () => setNetworkStatus(false));
   el('planDate').addEventListener('change', () => {
     if (!planDraft) return;
     planDraft.date = el('planDate').value;

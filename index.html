@@ -36,7 +36,7 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20261017.2" />
   <script type="application/ld+json">
     {
       "@context":"https://schema.org",
@@ -93,6 +93,7 @@
   <!-- ── MAIN ───────────────────────────────────────────── -->
   <main id="main">
     <div id="sourceStatus" class="source-status" role="status" aria-live="polite" hidden></div>
+    <div id="networkStatus" class="network-status" role="status" aria-live="polite" hidden></div>
     <section id="cityResults" class="card city-results" aria-labelledby="cityResultsTitle" hidden>
       <div class="results-heading">
         <h2 id="cityResultsTitle"></h2>
@@ -118,7 +119,8 @@
     </div>
 
     <section class="welcome-card" aria-labelledby="welcomeTitle">
-      <div>
+      <img id="welcomeImage" class="welcome-image" src="assets-wandex-istanbul-hero.webp" alt="" width="2000" height="786" fetchpriority="high" />
+      <div class="welcome-content">
         <p class="eyebrow" data-i18n="welcomeEyebrow"></p>
         <h1 id="welcomeTitle" data-i18n="welcomeTitle"></h1>
         <p class="welcome-copy" data-i18n="welcomeCopy"></p>
@@ -336,9 +338,13 @@
     <div class="footer-copyright" data-i18n="copyright"></div>
   </footer>
 
+  <noscript>
+    <div class="noscript-notice">Wandex şehir verilerini görüntülemek için tarayıcınızda JavaScript’i etkinleştirin.</div>
+  </noscript>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="locales.js"></script>
-  <script src="app.js"></script>
+  <script src="locales.js?v=20261017.2"></script>
+  <script src="app.js?v=20261017.2"></script>
 </body>
 </html>

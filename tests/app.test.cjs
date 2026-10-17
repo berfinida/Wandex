@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
 const source = fs.readFileSync('app.js', 'utf8');
+const page = fs.readFileSync('index.html', 'utf8');
 
 function harness({ blockedStorage = false, stored = {} } = {}) {
   const nodes = new Map();
@@ -383,4 +384,43 @@ test('language packs cover the selector languages and interpolate translated pro
   assert.equal(h.run('loc()'), 'ar');
   h.run("setLang('de')");
   assert.equal(h.run("t('weatherTitle')"), 'Wetter');
+  h.run("setLang('tr')");
+  assert.equal(h.run("t('welcomeTitle')"), 'Bir sonraki durağını daha bilinçli seç.');
+  assert.equal(h.run("t('briefTitle')"), 'Şehir özeti');
+  assert.equal(h.run("t('budgetTitle')"), 'Hızlı bütçe dönüşümü');
+});
+
+test('versioned local assets prevent a new page from using an immutable old translation script', () => {
+  assert.match(page, /href="style\.css\?v=20261017\.2"/);
+  assert.match(page, /src="locales\.js\?v=20261017\.2"/);
+  assert.match(page, /src="app\.js\?v=20261017\.2"/);
+});
+
+test('offline state clearly marks that new live data cannot be retrieved', () => {
+  const h = harness();
+  h.run('setNetworkStatus(false);');
+  assert.equal(h.node('networkStatus').hidden, false);
+  assert.match(h.node('networkStatus').textContent, /İnternet bağlantısı yok/);
+  h.run('setNetworkStatus(true);');
+  assert.equal(h.node('networkStatus').hidden, true);
+});
+
+test('launch page includes a local, non-decorative-only visual asset and no-script guidance', () => {
+  assert.equal(fs.existsSync('assets-wandex-istanbul-hero.webp'), true);
+  assert.equal(fs.existsSync('assets-wandex-london-hero.webp'), true);
+  assert.equal(fs.existsSync('assets-wandex-paris-hero.webp'), true);
+  assert.equal(fs.existsSync('assets-wandex-tokyo-hero.webp'), true);
+  assert.equal(fs.existsSync('assets-wandex-new-york-hero.webp'), true);
+  assert.match(page, /id="welcomeImage" class="welcome-image" src="assets-wandex-istanbul-hero\.webp"/);
+  assert.match(page, /<noscript>/);
+});
+
+test('popular city searches choose a matching local visual and other cities keep the neutral fallback', () => {
+  const h = harness();
+  h.run("renderCityHero('Paris')");
+  assert.equal(h.node('welcomeImage').src, 'assets-wandex-paris-hero.webp');
+  h.run("renderCityHero('New York City')");
+  assert.equal(h.node('welcomeImage').src, 'assets-wandex-new-york-hero.webp');
+  h.run("renderCityHero('Ankara')");
+  assert.equal(h.node('welcomeImage').src, 'assets-wandex-istanbul-hero.webp');
 });
